@@ -2,10 +2,9 @@ import datetime
 import heapq
 import json
 import logging
-from typing import List, Tuple, Dict, Any
+from typing import List
 
 import requests
-
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -22,14 +21,14 @@ class Lottery:
             data = json.load(f)
             return data['draws']
 
-    def get_results(self, game_name: str = 'Mega Millions', period_in_years: int = 1) -> List[dict]:
+    def get_results(self, game_name: str = 'Mega Millions', period_in_years: int = 1, size: int = 1000) -> List[dict]:
         params = {
             'date-from': int(
                 (datetime.datetime.now() - datetime.timedelta(days=period_in_years * 365)).timestamp() * 1000),
             'date-to': int(datetime.datetime.now().timestamp() * 1000),
             'game-names': game_name,
             'status': 'CLOSED',
-            'size': 100,
+            'size': size,
             'page': 0
         }
         res = requests.get(self.URL, params).json()
@@ -48,11 +47,8 @@ class Lottery:
     def prepare_numbers_pool(self) -> None:
         for i, val in enumerate(self.pick_5_counter):
             if i:
-                print('Yay', i)
                 self.pick_5_hot.append((-val, i))
                 self.pick_5_cold.append((val, i))
-            else:
-                print('No', i)
         for i, val in enumerate(self.mega_ball_counter):
             if i:
                 self.mega_ball_hot.append((-val, i))
@@ -76,7 +72,7 @@ class Lottery:
 
 if __name__ == '__main__':
     lottery = Lottery()
-    draws = lottery.get_results(period_in_years=3)
+    draws = lottery.get_results(period_in_years=3, size=100)
     lottery.parse_and_count(draws)
     lottery.prepare_numbers_pool()
     res = lottery.pick()
